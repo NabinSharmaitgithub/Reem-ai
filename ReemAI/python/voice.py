@@ -1,0 +1,34 @@
+import speech_recognition as sr
+
+def listen():
+    """
+    Listens to the microphone and returns the recognized text.
+    For true offline usage, pocketsphinx or vosk is recommended.
+    """
+    recognizer = sr.Recognizer()
+
+    try:
+        with sr.Microphone() as source:
+            print("Adjusting for ambient noise... Please wait.")
+            recognizer.adjust_for_ambient_noise(source, duration=1)
+            print("Listening for command...")
+            audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
+
+            print("Processing voice...")
+            # Note: recognize_google requires internet.
+            # For 100% offline, use recognizer.recognize_sphinx(audio)
+            # which requires 'pocketsphinx' library.
+            try:
+                # Attempting offline recognition if pocketsphinx is available
+                text = recognizer.recognize_sphinx(audio)
+            except (sr.UnknownValueError, AttributeError, ImportError):
+                # Fallback to a message or another engine
+                # For the sake of this open-source project, we recommend installing Vosk or Pocketsphinx
+                return "Error: Offline speech recognition (pocketsphinx) not installed or could not understand."
+
+            return text
+    except Exception as e:
+        return f"Error in voice module: {str(e)}"
+
+if __name__ == "__main__":
+    print("Voice module loaded.")
