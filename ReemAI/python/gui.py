@@ -1,86 +1,101 @@
-import tkinter as tk
-from tkinter import messagebox
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
+from kivy.clock import Clock
 import threading
 import main
 import voice
 
-class ReemAIApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Reem AI - Offline Operator")
-        self.root.geometry("500x350")
-        self.root.resizable(False, False)
+class ReemMobileApp(App):
+    def build(self):
+        self.title = "Reem AI - Mobile Operator"
+
+        # Root layout
+        root = BoxLayout(orientation='vertical', padding=10, spacing=10)
 
         # Safety Warning
-        self.warning_frame = tk.Frame(self.root, bg="#ffcccc", pady=5)
-        self.warning_frame.pack(fill=tk.X)
-        self.warning_label = tk.Label(
-            self.warning_frame,
-            text="⚠ SAFETY: This program controls your mouse and keyboard.\nUse only on systems you trust.",
-            fg="red", bg="#ffcccc", font=("Arial", 10, "bold")
+        warning_box = BoxLayout(size_hint_y=None, height=50, padding=5)
+        warning_label = Label(
+            text="[color=ff0000]⚠ SAFETY: Controls device gestures. Use on trusted systems.[/color]",
+            markup=True,
+            halign='center',
+            valign='middle'
         )
-        self.warning_label.pack()
+        warning_box.add_widget(warning_label)
+        root.add_widget(warning_box)
 
         # Title
-        self.title_label = tk.Label(self.root, text="Reem AI", font=("Arial", 24, "bold"))
-        self.title_label.pack(pady=10)
+        root.add_widget(Label(text="Reem AI", font_size='32sp', size_hint_y=None, height=60))
 
-        # Command Input Label
-        self.label = tk.Label(self.root, text="What can I do for you?", font=("Arial", 12))
-        self.label.pack(pady=5)
+        # Command Input
+        self.command_input = TextInput(
+            hint_text="What can I do for you?",
+            multiline=False,
+            size_hint_y=None,
+            height=50,
+            font_size='18sp'
+        )
+        self.command_input.bind(on_text_validate=self.on_send)
+        root.add_widget(self.command_input)
 
-        # Command Entry
-        self.command_entry = tk.Entry(self.root, width=50, font=("Arial", 12))
-        self.command_entry.pack(pady=10)
-        self.command_entry.bind("<Return>", lambda e: self.on_send())
+        # Buttons
+        btn_layout = BoxLayout(size_hint_y=None, height=60, spacing=10)
 
-        # Buttons Frame
-        self.btn_frame = tk.Frame(self.root)
-        self.btn_frame.pack(pady=10)
+        send_btn = Button(text="Send", background_color=(0.3, 0.7, 0.3, 1))
+        send_btn.bind(on_press=self.on_send)
+        btn_layout.add_widget(send_btn)
 
-        self.send_btn = tk.Button(self.btn_frame, text="Send", command=self.on_send, width=10, bg="#4CAF50", fg="white")
-        self.send_btn.pack(side=tk.LEFT, padx=5)
+        voice_btn = Button(text="🎤 Voice")
+        voice_btn.bind(on_press=self.on_voice)
+        btn_layout.add_widget(voice_btn)
 
-        self.voice_btn = tk.Button(self.btn_frame, text="🎤 Voice", command=self.on_voice, width=10)
-        self.voice_btn.pack(side=tk.LEFT, padx=5)
+        root.add_widget(btn_layout)
 
-        # Status Bar
-        self.status_var = tk.StringVar(value="Status: Ready")
-        self.status_bar = tk.Label(self.root, textvariable=self.status_var, bd=1, relief=tk.SUNKEN, anchor=tk.W)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        # Status
+        self.status_label = Label(
+            text="Status: Ready",
+            size_hint_y=None,
+            height=40,
+            halign='left',
+            valign='middle'
+        )
+        self.status_label.bind(size=self.status_label.setter('text_size'))
+        root.add_widget(self.status_label)
+
+        return root
 
     def set_status(self, text):
-        self.status_var.set(f"Status: {text}")
+        self.status_label.text = f"Status: {text}"
 
-    def on_send(self):
-        cmd = self.command_entry.get().strip()
+    def on_send(self, instance=None):
+        cmd = self.command_input.text.strip()
         if cmd:
-            self.command_entry.delete(0, tk.END)
-            self.set_status("Processing command...")
-            # Run in background to avoid freezing GUI
+            self.command_input.text = ""
+            self.set_status("Processing...")
             threading.Thread(target=self.run_command, args=(cmd,), daemon=True).start()
 
     def run_command(self, cmd):
         try:
             main.process(cmd)
-            self.root.after(0, lambda: self.set_status("Ready"))
+            Clock.schedule_once(lambda dt: self.set_status("Ready"))
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
-            self.root.after(0, lambda: self.set_status("Error occurred"))
+            # In Kivy we usually don't have a simple messagebox, we'll just show in status
+            Clock.schedule_once(lambda dt: self.set_status(f"Error: {str(e)}"))
 
-    def on_voice(self):
+    def on_voice(self, instance):
         self.set_status("Listening...")
         threading.Thread(target=self.run_voice, daemon=True).start()
 
     def run_voice(self):
         text = voice.listen()
         if text and not text.startswith("Error"):
-            self.root.after(0, lambda: self.command_entry.insert(0, text))
-            self.root.after(0, lambda: self.set_status("Voice recognized"))
+            Clock.schedule_once(lambda dt: setattr(self.command_input, 'text', text))
+            Clock.schedule_once(lambda dt: self.set_status("Voice recognized"))
         else:
-            self.root.after(0, lambda: self.set_status(text if text else "Could not hear anything"))
+            Clock.schedule_once(lambda dt: self.set_status(text if text else "Could not hear anything"))
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = ReemAIApp(root)
-    root.mainloop()
+    ReemMobileApp().run()

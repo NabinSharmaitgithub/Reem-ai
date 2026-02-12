@@ -1,94 +1,77 @@
-# Reem AI
+# Reem AI (Mobile & Desktop)
 
-Reem AI is an offline, free, and open-source AI operator that can see your screen and perform actions like a human (mouse, keyboard, scroll). Inspired by AI phone operators like blurr, Reem AI runs 100% locally on your machine.
+Reem AI is an offline, free, and open-source AI operator that can see your screen and perform actions like a human. This version has been converted to support **Mobile Applications** via ADB and **Desktop** via PyAutoGUI.
 
 ## 🎯 Features
-- **Screen Vision**: Uses OCR to read what's on your screen.
-- **Voice Control**: Accepts voice commands (with offline support options).
-- **Local Brain**: Powered by local GGUF models via `llama-cpp-python`.
-- **Action Execution**: Controls mouse and keyboard using `pyautogui`.
-- **Privacy First**: No cloud APIs, no data leaves your computer.
+- **Mobile Vision**: Captures mobile screens via ADB for OCR.
+- **Desktop Vision**: Uses PyAutoGUI for desktop OCR.
+- **Mobile Gestures**: Supports `tap`, `swipe`, and `keyevent` (home, back, etc.) via ADB.
+- **Cross-Platform GUI**: Built with Kivy for mobile and desktop compatibility.
+- **Local Brain**: Runs locally using GGUF models via `llama-cpp-python`.
 
 ## 🛠 Architecture
 ```
 ReemAI/
  ├── README.md
  └── python/
-      ├── gui.py        # Tkinter User Interface
-      ├── main.py       # Core Orchestration Logic
+      ├── gui.py        # Kivy User Interface (Mobile Ready)
+      ├── main.py       # Core Orchestration (handles mobile/desktop modes)
       ├── llm.py        # Local Model Interface
-      ├── vision.py     # Screen Capture & OCR
+      ├── vision.py     # OCR for both Mobile & Desktop
       ├── voice.py      # Speech Recognition
       ├── planner.py    # AI Action Planning
-      ├── executor.py   # UI Action Execution
-      ├── prompt.txt    # System Prompt Template
+      ├── executor.py   # Action Execution (ADB for Mobile, PyAutoGUI for Desktop)
+      ├── prompt.txt    # System Prompt Template with mobile actions
       └── model/
            └── model.gguf # Place your local model here
 ```
 
 ## 📦 Requirements
 - Python 3.10+
-- **Tesseract OCR engine**: Must be installed on your system.
-- **PortAudio**: Required for the `pyaudio` library.
+- **Tesseract OCR engine**: Must be installed.
+- **ADB (Android Debug Bridge)**: Required for mobile control.
 
 ### Python Libraries:
 ```bash
-pip install pyautogui pytesseract pillow llama-cpp-python speechrecognition pyaudio opencv-python
+pip install kivy plyer pyautogui pytesseract pillow llama-cpp-python speechrecognition pyaudio opencv-python
 ```
 
-## 🚀 Installation & Setup
+## 🚀 Mobile Setup
 
-1. **Clone the repository**:
+1. **Connect your Android Device**:
+   - Enable **Developer Options** and **USB Debugging**.
+   - Connect via USB or ADB over WiFi.
+   - Verify connection: `adb devices`
+
+2. **Run the Application**:
    ```bash
-   git clone <repository-url>
-   cd ReemAI
-   ```
-
-2. **Install System Dependencies**:
-   - **Tesseract OCR**:
-     - Ubuntu: `sudo apt install tesseract-ocr`
-     - Mac: `brew install tesseract`
-     - Windows: Download the installer from UB Mannheim's Tesseract page.
-   - **PortAudio** (for Voice):
-     - Ubuntu: `sudo apt install portaudio19-dev`
-     - Mac: `brew install portaudio`
-
-3. **Download a Local LLM**:
-   - Download a GGUF model (Recommended: Phi-2, Gemma 2B, or Mistral 7B Q4_K_M).
-   - Place the file in `ReemAI/python/model/` and rename it to `model.gguf`.
-
-4. **Run the Application**:
-   ```bash
+   # Defaults to mobile mode
    python3 python/gui.py
    ```
 
-## 🧠 Example AI Interaction
+3. **Desktop Mode**:
+   - To use desktop mode, set the environment variable:
+   ```bash
+   REEM_MODE=desktop python3 python/gui.py
+   ```
 
-**User Command**: "Search for cats on Google"
+## 🧠 Example Mobile Interaction
 
-**System Prompt (Generated)**:
-```text
-You are Reem AI, an offline AI operator...
-Screen Content: [Text from your browser window...]
-User Command: Search for cats on Google
-...
-```
+**User Command**: "Open Instagram and scroll down"
 
 **Example AI JSON Response**:
 ```json
 [
-  {"action": "click", "x": 400, "y": 300},
-  {"action": "type", "text": "cats"},
-  {"action": "press", "key": "enter"},
-  {"action": "wait", "seconds": 2}
+  {"action": "tap", "x": 200, "y": 500},
+  {"action": "wait", "seconds": 2},
+  {"action": "swipe", "x1": 500, "y1": 1500, "x2": 500, "y2": 500, "duration": 500}
 ]
 ```
 
 ## ⚠ SAFETY WARNING
-**This program controls your mouse and keyboard.** It can perform any action a human can.
-- Use only on systems you trust.
-- Be aware that the AI might misinterpret screen content or commands.
-- **Fail-safe**: If the AI goes out of control, move your mouse cursor quickly to the **top-left corner** of the screen to abort all actions.
+**This program controls your device.**
+- Move your mouse to the **top-left** (Desktop) or disconnect the device (Mobile) to stop.
+- The AI may misinterpret screen content. Use with caution.
 
 ## 🆓 License
-Reem AI is released under the Apache-2.0 license. It is 100% free, offline, and open-source.
+Apache-2.0. Free, Offline, Open-Source.

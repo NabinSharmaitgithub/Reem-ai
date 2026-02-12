@@ -3,20 +3,41 @@ import pytesseract
 from PIL import Image
 import cv2
 import os
+import subprocess
+import io
 
 # If tesseract is not in your PATH, uncomment and set this:
 # pytesseract.pytesseract.tesseract_cmd = r'/usr/bin/tesseract'
 
 def read_screen():
     """
-    Captures the primary screen and returns the text found via OCR.
+    Captures the primary desktop screen and returns the text found via OCR.
     """
     try:
         screenshot = pyautogui.screenshot()
         text = pytesseract.image_to_string(screenshot)
         return text.strip()
     except Exception as e:
-        return f"Error reading screen: {str(e)}"
+        return f"Error reading desktop screen: {str(e)}"
+
+def read_mobile_screen():
+    """
+    Captures the mobile screen via ADB and returns the text found via OCR.
+    """
+    try:
+        # Capture screen via ADB
+        process = subprocess.Popen(['adb', 'exec-out', 'screencap', '-p'], stdout=subprocess.PIPE)
+        screenshot_data, _ = process.communicate()
+
+        if not screenshot_data:
+            return "Error: Failed to capture mobile screen via ADB. Is the device connected?"
+
+        # Load image from bytes
+        img = Image.open(io.BytesIO(screenshot_data))
+        text = pytesseract.image_to_string(img)
+        return text.strip()
+    except Exception as e:
+        return f"Error reading mobile screen: {str(e)}"
 
 def read_camera():
     """
@@ -42,5 +63,4 @@ def read_camera():
         return f"Error reading camera: {str(e)}"
 
 if __name__ == "__main__":
-    # Test functions
-    print("Vision module loaded.")
+    print("Vision module loaded with mobile support.")

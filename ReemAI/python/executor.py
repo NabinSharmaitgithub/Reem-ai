@@ -1,13 +1,13 @@
 import pyautogui
 import time
+import subprocess
 
 # Enable fail-safe: move mouse to top-left corner to abort
 pyautogui.FAILSAFE = True
 
 def run_plan(steps):
     """
-    Executes a sequence of UI actions based on a list of steps.
-    Each step is a dictionary containing 'action' and parameters.
+    Executes a sequence of UI actions for Desktop.
     """
     if not steps:
         print("No actions to execute.")
@@ -15,7 +15,7 @@ def run_plan(steps):
 
     for step in steps:
         action = step.get("action")
-        print(f"Executing: {step}")
+        print(f"Executing Desktop: {step}")
 
         try:
             if action == "click":
@@ -41,10 +41,62 @@ def run_plan(steps):
                     pyautogui.press(key)
 
             else:
-                print(f"Unknown action: {action}")
+                # Fallback to mobile if action is tap/swipe but run_plan was called
+                if action in ["tap", "swipe"]:
+                    run_mobile_plan([step])
+                else:
+                    print(f"Unknown desktop action: {action}")
 
         except Exception as e:
             print(f"Failed to execute {action}: {e}")
 
+def run_mobile_plan(steps):
+    """
+    Executes a sequence of UI actions for Mobile via ADB.
+    """
+    if not steps:
+        return
+
+    for step in steps:
+        action = step.get("action")
+        print(f"Executing Mobile: {step}")
+
+        try:
+            if action == "tap" or action == "click":
+                x, y = step.get("x"), step.get("y")
+                if x is not None and y is not None:
+                    subprocess.run(['adb', 'shell', 'input', 'tap', str(x), str(y)])
+
+            elif action == "type":
+                text = step.get("text", "")
+                # ADB input text doesn't handle spaces well unless quoted
+                # Better to use shell input text "quoted_text" or escape spaces
+                escaped_text = text.replace(" ", "%s")
+                subprocess.run(['adb', 'shell', 'input', 'text', escaped_text])
+
+            elif action == "swipe":
+                x1, y1 = step.get("x1"), step.get("y1")
+                x2, y2 = step.get("x2"), step.get("y2")
+                duration = step.get("duration", 300)
+                if all(v is not None for v in [x1, y1, x2, y2]):
+                    subprocess.run(['adb', 'shell', 'input', 'swipe', str(x1), str(y1), str(x2), str(y2), str(duration)])
+
+            elif action == "press":
+                key = step.get("key")
+                # Map some common keys to ADB keycodes
+                key_map = {"enter": "66", "home": "3", "back": "4"}
+                keycode = key_map.get(key.lower(), key)
+                subprocess.run(['adb', 'shell', 'input', 'keyevent', keycode])
+
+            elif action == "wait":
+                seconds = step.get("seconds", 1)
+                time.sleep(seconds)
+
+            else:
+                print(f"Unknown mobile action: {action}")
+
+        except Exception as e:
+            print(f"Failed to execute mobile {action}: {e}")
+
 if __name__ == "__main__":
-    print("Executor module ready.")
+    print("Executor module ready with mobile ADB support.")
