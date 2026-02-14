@@ -1,6 +1,6 @@
 # Reem AI (Mobile & Desktop)
 
-Reem AI is an offline, free, and open-source AI operator that can see your screen and perform actions like a human. This version has been converted to support **Mobile Applications** via ADB and **Desktop** via PyAutoGUI.
+Reem AI is an offline, free, and open-source AI operator that can see your screen and perform actions like a human. This version supports **Mobile Applications** (via ADB) and **Desktop** (via PyAutoGUI).
 
 ## 🎯 Features
 - **Mobile Vision**: Captures mobile screens via ADB for OCR.
@@ -12,54 +12,49 @@ Reem AI is an offline, free, and open-source AI operator that can see your scree
 ## 🛠 Architecture
 ```
 ReemAI/
- ├── README.md
- └── python/
-      ├── gui.py        # Kivy User Interface (Mobile Ready)
-      ├── main.py       # Core Orchestration (handles mobile/desktop modes)
-      ├── llm.py        # Local Model Interface
-      ├── vision.py     # OCR for both Mobile & Desktop
-      ├── voice.py      # Speech Recognition
-      ├── planner.py    # AI Action Planning
-      ├── executor.py   # Action Execution (ADB for Mobile, PyAutoGUI for Desktop)
-      ├── prompt.txt    # System Prompt Template with mobile actions
+ ├── app/
+      ├── main.py           # Kivy UI Entry Point
+      ├── orchestrator.py   # Core Logic (handles mobile/desktop modes)
+      ├── llm.py            # Local Model Interface
+      ├── vision.py         # OCR for both Mobile & Desktop
+      ├── voice.py          # Speech Recognition
+      ├── planner.py        # AI Action Planning
+      ├── executor.py       # Action Execution
+      ├── prompt.txt        # System Prompt Template
+      ├── buildozer.spec    # APK Build Configuration
+      ├── DEPLOYMENT.md     # Guide for GitHub/Vercel
       └── model/
-           └── model.gguf # Place your local model here
+           └── model.gguf   # Place your local model here
 ```
 
 ## 📦 Requirements
 - Python 3.10+
-- **Tesseract OCR engine**: Must be installed.
-- **ADB (Android Debug Bridge)**: Required for mobile control.
+- **Tesseract OCR engine**: Must be installed on the machine running the app.
+- **ADB (Android Debug Bridge)**: Required for mobile control mode.
 
 ### Python Libraries:
 ```bash
 pip install kivy plyer pyautogui pytesseract pillow llama-cpp-python speechrecognition pyaudio opencv-python
 ```
 
-## 🚀 Mobile Setup
+## 🚀 Setup & Running
 
-1. **Connect your Android Device**:
-   - Enable **Developer Options** and **USB Debugging**.
-   - Connect via USB or ADB over WiFi.
+1. **Desktop Mode**:
+   - Run: `REEM_MODE=desktop python3 app/main.py`
+   - The AI will see your computer screen and control your mouse/keyboard.
+
+2. **Mobile Mode (Remote Control)**:
+   - Connect your Android device via USB.
+   - Enable **USB Debugging** in Developer Options.
    - Verify connection: `adb devices`
-
-2. **Run the Application**:
-   ```bash
-   # Defaults to mobile mode
-   python3 python/gui.py
-   ```
-
-3. **Desktop Mode**:
-   - To use desktop mode, set the environment variable:
-   ```bash
-   REEM_MODE=desktop python3 python/gui.py
-   ```
+   - Run: `REEM_MODE=mobile python3 app/main.py`
+   - The AI will see the phone screen and send touch events via ADB.
 
 ## 🧠 Example Mobile Interaction
 
 **User Command**: "Open Instagram and scroll down"
 
-**Example AI JSON Response**:
+**AI Action**:
 ```json
 [
   {"action": "tap", "x": 200, "y": 500},
@@ -70,8 +65,9 @@ pip install kivy plyer pyautogui pytesseract pillow llama-cpp-python speechrecog
 
 ## ⚠ SAFETY WARNING
 **This program controls your device.**
-- Move your mouse to the **top-left** (Desktop) or disconnect the device (Mobile) to stop.
-- The AI may misinterpret screen content. Use with caution.
+- **Desktop**: Move mouse to **top-left** to abort.
+- **Mobile**: Disconnect the USB cable to stop.
+- The AI may misinterpret screen content. Use only on trusted systems.
 
 ## 🆓 License
 Apache-2.0. Free, Offline, Open-Source.

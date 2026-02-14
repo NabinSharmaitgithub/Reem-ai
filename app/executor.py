@@ -83,9 +83,10 @@ def run_mobile_plan(steps):
 
             elif action == "press":
                 key = step.get("key")
-                key_map = {"enter": "66", "home": "3", "back": "4"}
-                keycode = key_map.get(key.lower(), key)
-                subprocess.run(['adb', 'shell', 'input', 'keyevent', keycode])
+                if key:
+                    key_map = {"enter": "66", "home": "3", "back": "4"}
+                    keycode = key_map.get(str(key).lower(), key)
+                    subprocess.run(['adb', 'shell', 'input', 'keyevent', str(keycode)])
 
             elif action == "wait":
                 seconds = step.get("seconds", 1)
