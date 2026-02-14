@@ -1,14 +1,17 @@
-import pyautogui
 import time
 import subprocess
-
-# Enable fail-safe: move mouse to top-left corner to abort
-pyautogui.FAILSAFE = True
 
 def run_plan(steps):
     """
     Executes a sequence of UI actions for Desktop.
     """
+    try:
+        import pyautogui
+        pyautogui.FAILSAFE = True
+    except ImportError:
+        print("Desktop execution (pyautogui) not available.")
+        return
+
     if not steps:
         print("No actions to execute.")
         return
@@ -41,7 +44,6 @@ def run_plan(steps):
                     pyautogui.press(key)
 
             else:
-                # Fallback to mobile if action is tap/swipe but run_plan was called
                 if action in ["tap", "swipe"]:
                     run_mobile_plan([step])
                 else:
@@ -69,8 +71,6 @@ def run_mobile_plan(steps):
 
             elif action == "type":
                 text = step.get("text", "")
-                # ADB input text doesn't handle spaces well unless quoted
-                # Better to use shell input text "quoted_text" or escape spaces
                 escaped_text = text.replace(" ", "%s")
                 subprocess.run(['adb', 'shell', 'input', 'text', escaped_text])
 
@@ -83,7 +83,6 @@ def run_mobile_plan(steps):
 
             elif action == "press":
                 key = step.get("key")
-                # Map some common keys to ADB keycodes
                 key_map = {"enter": "66", "home": "3", "back": "4"}
                 keycode = key_map.get(key.lower(), key)
                 subprocess.run(['adb', 'shell', 'input', 'keyevent', keycode])
@@ -99,4 +98,4 @@ def run_mobile_plan(steps):
             print(f"Failed to execute mobile {action}: {e}")
 
 if __name__ == "__main__":
-    print("Executor module ready with mobile ADB support.")
+    print("Executor module ready.")

@@ -6,7 +6,7 @@ from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.clock import Clock
 import threading
-import main
+import orchestrator
 import voice
 
 class ReemMobileApp(App):
@@ -79,10 +79,9 @@ class ReemMobileApp(App):
 
     def run_command(self, cmd):
         try:
-            main.process(cmd)
+            orchestrator.process(cmd)
             Clock.schedule_once(lambda dt: self.set_status("Ready"))
         except Exception as e:
-            # In Kivy we usually don't have a simple messagebox, we'll just show in status
             Clock.schedule_once(lambda dt: self.set_status(f"Error: {str(e)}"))
 
     def on_voice(self, instance):
