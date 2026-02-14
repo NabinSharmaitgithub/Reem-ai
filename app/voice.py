@@ -1,10 +1,12 @@
-import speech_recognition as sr
-
 def listen():
     """
     Listens to the microphone and returns the recognized text.
-    For true offline usage, pocketsphinx or vosk is recommended.
     """
+    try:
+        import speech_recognition as sr
+    except ImportError:
+        return "Error: speech_recognition not installed."
+
     recognizer = sr.Recognizer()
 
     try:
@@ -15,15 +17,10 @@ def listen():
             audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
 
             print("Processing voice...")
-            # Note: recognize_google requires internet.
-            # For 100% offline, use recognizer.recognize_sphinx(audio)
-            # which requires 'pocketsphinx' library.
             try:
-                # Attempting offline recognition if pocketsphinx is available
+                # Attempting offline recognition
                 text = recognizer.recognize_sphinx(audio)
             except (sr.UnknownValueError, AttributeError, ImportError):
-                # Fallback to a message or another engine
-                # For the sake of this open-source project, we recommend installing Vosk or Pocketsphinx
                 return "Error: Offline speech recognition (pocketsphinx) not installed or could not understand."
 
             return text
